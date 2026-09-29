@@ -8,6 +8,11 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    // tsx (no ts-node): el generator moderno "prisma-client" emite `client.ts`
+    // como fuente ESM nativa; forzar ts-node a CommonJS chocaba con eso
+    // ("exports is not defined in ES module scope"). tsx resuelve ESM/CJS
+    // sin fricción y ya es una dependencia del proyecto (instalada al usarla).
+    seed: "tsx prisma/seed.ts",
   },
   engine: "classic",
   datasource: {

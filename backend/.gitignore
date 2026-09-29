@@ -7,7 +7,9 @@
 *.tsbuildinfo
 
 # Logs
-logs
+# Anclado a la raíz (`/logs`, no `logs`): sin la barra inicial, este patrón
+# también ignoraba por accidente `src/logs/` (el LogsModule de NestJS).
+/logs
 *.log
 npm-debug.log*
 pnpm-debug.log*

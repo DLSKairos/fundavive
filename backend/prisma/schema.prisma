@@ -1,15 +1,375 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+//
+// Schema de "fundavive" — réplica funcional del backend legacy funac-back
+// (Express + SQL crudo) sobre NestJS + Prisma + PostgreSQL.
+//
+// Convenciones:
+// - Modelos en PascalCase, campos en camelCase (idiomático de Prisma/TS).
+// - Tablas y columnas mapeadas a snake_case vía @@map/@map para mantener
+//   la convención habitual de PostgreSQL y facilitar la lectura de SQL crudo
+//   (logs, backups, herramientas externas, etc.).
+// - Enums de Prisma reemplazan los CHECK constraints del legacy sobre columnas
+//   de estado/tipo cerrado. Los campos de texto libre (p. ej. `accion` en los
+//   logs de auditoría, o `plataforma` en redes sociales) se dejan como String
+//   para no bloquear valores futuros no previstos hoy.
+// - Todos los timestamps usan `@db.Timestamptz` (equivalente a timestamptz).
+//   Los campos `actualizadoEn`/`@updatedAt` sustituyen los triggers
+//   `actualizar_timestamp()` del legacy: Prisma los gestiona automáticamente
+//   en cada UPDATE, por lo que no se recrea la función ni el trigger en SQL.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  // "prisma-client-js" (el generator clásico), NO el nuevo "prisma-client":
+  // este último emite su `client.ts` usando `import.meta.url` (sintaxis
+  // ESM pura, sin equivalente en CommonJS) para resolver `__dirname`. Node
+  // detecta ese archivo como módulo ambiguo/ESM en tiempo de ejecución y lo
+  // carga con el loader incorrecto, reventando con
+  // "ReferenceError: exports is not defined in ES module scope" tanto al
+  // correr el seed como al arrancar Nest (verificado en runtime, no solo en
+  // `tsc --noEmit`). El generator clásico es CJS-first, es el estándar
+  // probado para NestJS, y evita todo este workaround: se genera dentro de
+  // node_modules (ya precompilado, no pasa por nuestro propio build de tsc).
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum EstadoVoluntario {
+  pendiente
+  en_revision
+  aprobado
+  rechazado
+  inactivo
+
+  @@map("estado_voluntario")
+}
+
+enum EstadoDonacion {
+  pendiente
+  completada
+  fallida
+  cancelada
+  reembolsada
+
+  @@map("estado_donacion")
+}
+
+enum FrecuenciaDonacion {
+  mensual
+  bimestral
+  trimestral
+  anual
+
+  @@map("frecuencia_donacion")
+}
+
+enum PaginaCms {
+  quienes_somos
+  valores
+  mision_vision
+  contacto
+
+  @@map("pagina_cms")
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios administradores del panel
+// ---------------------------------------------------------------------------
+
+model UsuarioAdmin {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique @db.VarChar(50)
+  email         String    @unique @db.VarChar(150)
+  passwordHash  String    @map("password_hash") @db.Text
+  activo        Boolean   @default(true)
+  ultimoAcceso  DateTime? @map("ultimo_acceso") @db.Timestamptz(6)
+  creadoEn      DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn DateTime  @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  contenidosActualizados ContenidoPagina[]   @relation("ContenidoActualizadoPor")
+  logsActividad          LogActividadAdmin[]
+
+  @@map("usuarios_admin")
+}
+
+// ---------------------------------------------------------------------------
+// Voluntarios
+// ---------------------------------------------------------------------------
+
+model Voluntario {
+  id                    Int              @id @default(autoincrement())
+  nombreCompleto        String           @map("nombre_completo") @db.VarChar(150)
+  cedula                String           @unique @db.VarChar(20)
+  email                 String           @unique @db.VarChar(150)
+  telefono              String           @db.VarChar(20)
+  ciudad                String           @db.VarChar(100)
+  direccion             String?          @db.VarChar(250)
+  fechaNacimiento       DateTime?        @map("fecha_nacimiento") @db.Date
+  nivelEstudios         String?          @map("nivel_estudios") @db.VarChar(100)
+  profesionOcupacion    String?          @map("profesion_ocupacion") @db.VarChar(150)
+  habilidadesEspeciales String?          @map("habilidades_especiales") @db.Text
+  disponibilidadHoraria String?          @map("disponibilidad_horaria") @db.VarChar(100)
+  motivacion            String?          @db.Text
+  // Array de strings de texto libre (construccion, educacion, salud,
+  // recaudacion, capacitacion, comunicaciones, juridico, administrativo, ...).
+  // No se modela como enum estricto en BD para no bloquear nuevas áreas.
+  areasInteres          Json?            @map("areas_interes")
+  estado                EstadoVoluntario @default(pendiente)
+  notasAdmin            String?          @map("notas_admin") @db.Text
+  nombreArchivoCv       String?          @map("nombre_archivo_cv") @db.VarChar(255)
+  rutaArchivoCv         String?          @map("ruta_archivo_cv") @db.Text
+  urlCv                 String?          @map("url_cv") @db.Text
+  creadoEn              DateTime         @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn         DateTime         @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  // NOTA: el legacy además mantiene un índice GIN full-text (tsvector) sobre
+  // `nombre_completo` para búsqueda difusa desde el panel admin. Prisma no
+  // modela índices GIN/tsvector de forma nativa; si se necesita, agregar vía
+  // migración manual (`CREATE INDEX ... USING GIN (to_tsvector(...))`) después
+  // de `prisma migrate dev`.
+  @@index([ciudad])
+  @@index([estado])
+  @@index([creadoEn(sort: Desc)])
+  @@map("voluntarios")
+}
+
+// ---------------------------------------------------------------------------
+// Donaciones (ePayco)
+// ---------------------------------------------------------------------------
+
+model Donacion {
+  id                   Int                 @id @default(autoincrement())
+  nombreCompleto       String              @map("nombre_completo") @db.VarChar(150)
+  email                String              @db.VarChar(150)
+  telefono             String?             @db.VarChar(20)
+  cedula               String?             @db.VarChar(20)
+  monto                Decimal             @db.Decimal(12, 2)
+  moneda               String              @default("COP") @db.VarChar(10)
+  estado               EstadoDonacion      @default(pendiente)
+  // Formato esperado: FUNAC-YYYYMMDD-<id> (ajustar prefijo si aplica).
+  referenciaEpayco     String?             @unique @map("referencia_epayco") @db.VarChar(100)
+  refPayco             String?             @map("ref_payco") @db.VarChar(200)
+  transactionId        String?             @map("transaction_id") @db.VarChar(200)
+  esRecurrente         Boolean             @default(false) @map("es_recurrente")
+  frecuencia           FrecuenciaDonacion?
+  aparecerMuroDonantes Boolean             @default(false) @map("aparecer_muro_donantes")
+  comprobanteEnviado   Boolean             @default(false) @map("comprobante_enviado")
+  fechaPago            DateTime?           @map("fecha_pago") @db.Timestamptz(6)
+  creadoEn             DateTime            @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn        DateTime            @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  @@index([estado])
+  @@index([monto])
+  @@index([esRecurrente])
+  @@index([email])
+  @@index([creadoEn(sort: Desc)])
+  @@map("donaciones")
+}
+
+// ---------------------------------------------------------------------------
+// Bandeja de contacto
+// ---------------------------------------------------------------------------
+
+model FormularioContacto {
+  id             Int      @id @default(autoincrement())
+  nombreCompleto String   @map("nombre_completo") @db.VarChar(150)
+  email          String   @db.VarChar(150)
+  telefono       String?  @db.VarChar(20)
+  asunto         String   @db.VarChar(200)
+  mensaje        String   @db.Text
+  // El legacy no expone endpoint admin para gestionar esta bandeja (solo
+  // insert público + conteo en dashboard). Se deja `leido` modelado a
+  // propósito como MEJORA sobre el legacy: este proyecto sí implementa un
+  // endpoint admin para marcar como leídos los mensajes de contacto.
+  leido          Boolean  @default(false)
+  creadoEn       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  @@index([leido])
+  @@index([creadoEn(sort: Desc)])
+  @@map("formularios_contacto")
+}
+
+// ---------------------------------------------------------------------------
+// CMS: contenido editable de páginas institucionales
+// ---------------------------------------------------------------------------
+
+model ContenidoPagina {
+  id             Int       @id @default(autoincrement())
+  pagina         PaginaCms
+  seccion        String    @db.VarChar(100)
+  contenido      String?   @db.Text
+  orden          Int       @default(0)
+  activo         Boolean   @default(true)
+  actualizadoPor Int?      @map("actualizado_por")
+  icono          String?   @db.VarChar(50)
+  creadoEn       DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn  DateTime  @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  editor UsuarioAdmin? @relation("ContenidoActualizadoPor", fields: [actualizadoPor], references: [id], onDelete: SetNull)
+
+  @@unique([pagina, seccion])
+  @@index([activo])
+  @@index([pagina, orden])
+  @@map("contenido_paginas")
+}
+
+// ---------------------------------------------------------------------------
+// Media: carrusel de imágenes de portada
+// ---------------------------------------------------------------------------
+
+model ImagenCarrusel {
+  id            Int      @id @default(autoincrement())
+  titulo        String?  @db.VarChar(200)
+  descripcion   String?  @db.Text
+  nombreArchivo String   @map("nombre_archivo") @db.VarChar(255)
+  urlImagen     String   @map("url_imagen") @db.Text
+  // public_id de Cloudinary.
+  rutaArchivo   String   @map("ruta_archivo") @db.Text
+  tamanoArchivo BigInt?  @map("tamano_archivo")
+  ancho         Int?
+  alto          Int?
+  orden         Int      @default(0)
+  activo        Boolean  @default(true)
+  subidoEn      DateTime @default(now()) @map("subido_en") @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  @@index([activo])
+  @@index([orden])
+  @@map("imagenes_carrusel")
+}
+
+// ---------------------------------------------------------------------------
+// Media: imágenes fijas por sección de página (slots predefinidos)
+// ---------------------------------------------------------------------------
+
+model ImagenSeccion {
+  id            Int      @id @default(autoincrement())
+  pagina        String   @db.VarChar(50)
+  clave         String   @db.VarChar(50)
+  etiqueta      String   @db.VarChar(150)
+  nombreArchivo String?  @map("nombre_archivo") @db.VarChar(255)
+  urlImagen     String?  @map("url_imagen") @db.Text
+  rutaArchivo   String?  @map("ruta_archivo") @db.Text
+  tamanoArchivo BigInt?  @map("tamano_archivo")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  // Estos son 8 slots FIJOS que se seedean una sola vez (ver prisma/seed.ts):
+  // (inicio,hero) (quienes_somos,hero) (quienes_somos,testimonio_1)
+  // (quienes_somos,testimonio_2) (quienes_somos,testimonio_3) (contacto,hero)
+  // (voluntarios,hero) (donaciones,hero). No se crean ni se borran filas desde
+  // el panel admin: solo se actualiza la imagen de un slot existente.
+  @@unique([pagina, clave])
+  @@map("imagenes_secciones")
+}
+
+// ---------------------------------------------------------------------------
+// Media: PDFs informativos descargables
+// ---------------------------------------------------------------------------
+
+model PdfInformativo {
+  id            Int      @id @default(autoincrement())
+  titulo        String   @db.VarChar(300)
+  descripcion   String?  @db.Text
+  nombreArchivo String   @map("nombre_archivo") @db.VarChar(255)
+  urlPdf        String   @map("url_pdf") @db.Text
+  rutaArchivo   String   @map("ruta_archivo") @db.Text
+  tamanoArchivo BigInt?  @map("tamano_archivo")
+  descargas     Int      @default(0)
+  activo        Boolean  @default(true)
+  subidoEn      DateTime @default(now()) @map("subido_en") @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  @@index([activo])
+  @@index([subidoEn(sort: Desc)])
+  @@map("pdfs_informativos")
+}
+
+// ---------------------------------------------------------------------------
+// Configuración: WhatsApp flotante
+// ---------------------------------------------------------------------------
+
+model ConfiguracionWhatsapp {
+  id                    Int      @id @default(autoincrement())
+  codigoPais            String   @default("+57") @map("codigo_pais") @db.VarChar(10)
+  numero                String   @db.VarChar(20)
+  mensajePredeterminado String?  @map("mensaje_predeterminado") @db.Text
+  activo                Boolean  @default(true)
+  creadoEn              DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn         DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  // Singleton de facto: la aplicación garantiza que solo haya una fila
+  // relevante (no hay constraint de BD adicional para esto).
+  @@map("configuracion_whatsapp")
+}
+
+// ---------------------------------------------------------------------------
+// Configuración: redes sociales
+// ---------------------------------------------------------------------------
+
+model ConfiguracionRedSocial {
+  id            Int      @id @default(autoincrement())
+  // Texto libre: facebook, instagram, etc.
+  plataforma    String   @unique @db.VarChar(50)
+  url           String?  @db.Text
+  activo        Boolean  @default(false)
+  creadoEn      DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  actualizadoEn DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  @@map("configuracion_redes_sociales")
+}
+
+// ---------------------------------------------------------------------------
+// Configuración: modal de noticia/campaña destacada
+// ---------------------------------------------------------------------------
+
+model ConfiguracionModalNoticia {
+  id             Int      @id @default(autoincrement())
+  activo         Boolean  @default(true)
+  titulo         String   @default("Nueva campaña destacada") @db.Text
+  subtitulo      String?  @db.Text
+  badgeTexto     String   @default("Noticia destacada") @map("badge_texto") @db.Text
+  highlightTexto String?  @default("Cada donación hace la diferencia.") @map("highlight_texto") @db.Text
+  urlDestino     String   @default("/donaciones") @map("url_destino") @db.Text
+  etiquetaBoton  String   @default("Quiero ayudar") @map("etiqueta_boton") @db.Text
+  imagenUrl      String?  @map("imagen_url") @db.Text
+  imagenPublicId String?  @map("imagen_public_id") @db.Text
+  actualizadoEn  DateTime @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  // Singleton: la aplicación debe garantizar una sola fila (convención: id=1).
+  @@map("configuracion_modal_noticia")
+}
+
+// ---------------------------------------------------------------------------
+// Auditoría: log de actividad del panel admin
+// ---------------------------------------------------------------------------
+
+model LogActividadAdmin {
+  id          Int      @id @default(autoincrement())
+  usuarioId   Int?     @map("usuario_id")
+  // Texto libre (no enum) para no bloquear nuevas acciones futuras. Valores
+  // esperados hoy: login, logout, upload_carousel, delete_carousel,
+  // upload_pdf, delete_pdf, update_volunteer_status, delete_volunteer,
+  // resend_receipt, update_social, update_whatsapp, change_password,
+  // update_page, update_news_modal, update_news_modal_image,
+  // delete_news_modal_image, update_section_image, reset_section_image,
+  // update_contact_read.
+  accion      String   @db.VarChar(100)
+  descripcion String?  @db.Text
+  ipAddress   String?  @map("ip_address") @db.VarChar(45)
+  recursoId   Int?     @map("recurso_id")
+  creadoEn    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+
+  usuario UsuarioAdmin? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([accion])
+  @@index([creadoEn(sort: Desc)])
+  @@index([usuarioId])
+  @@map("logs_actividad_admin")
 }
