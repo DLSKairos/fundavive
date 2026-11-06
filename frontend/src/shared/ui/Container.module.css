@@ -1,0 +1,2 @@
+.wrap { max-width: var(--ancho); margin: 0 auto; padding: 0 24px; }
+.narrow { max-width: 900px; }

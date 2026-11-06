@@ -1,0 +1,22 @@
+/* Identidad de marca (manual de marca). Todo el sitio usa SOLO estas variables. */
+:root {
+  --ocre: #d88a25;
+  --rojo: #cc433a;
+  --amarillo: #e9b841;
+  --teal: #3b8d9c;
+  --negro: #000100;
+  --crema: #f4eadc;
+  --crema-2: #e9dcc9;
+  --oliva: #a9a84f;
+  --texto: #241f17;
+  --texto-suave: #4a4034;
+  --texto-tenue: #8a7d6b;
+
+  /* Puck (principal) aún no está en el proyecto: se usa Fredoka como sustituta */
+  --f-titulo: 'Puck', 'Fredoka', system-ui, sans-serif;
+  --f-texto: 'Varela Round', system-ui, sans-serif;
+
+  --radio: 28px;
+  --ancho: 1160px;
+  --nav-alto: 84px;
+}

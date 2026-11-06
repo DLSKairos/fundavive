@@ -1,0 +1,14 @@
+.box { margin-bottom: 44px; }
+.center { text-align: center; }
+.center .eyebrow { justify-content: center; }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 10px; font-size: 0.86rem;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal); margin-bottom: 18px;
+}
+.eyebrow::before { content: ''; width: 34px; height: 3px; border-radius: 3px; background: currentColor; }
+.title { font-size: clamp(2rem, 3.6vw, 2.9rem); margin-bottom: 14px; color: var(--negro); }
+.sub { max-width: 640px; color: var(--texto-suave); }
+.center .sub { margin: 0 auto; }
+.light .eyebrow { color: var(--amarillo); }
+.light .title { color: #fff; }
+.light .sub { color: #cfc8bc; }

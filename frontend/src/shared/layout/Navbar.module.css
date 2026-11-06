@@ -1,0 +1,17 @@
+.nav { position: sticky; top: 0; z-index: 60; background: rgba(244, 234, 220, 0.94); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(36, 31, 23, 0.08); }
+.fila { display: flex; align-items: center; justify-content: space-between; height: var(--nav-alto); gap: 16px; }
+.menu { display: flex; align-items: center; gap: 6px; font-size: 0.98rem; }
+.menu a { padding: 9px 16px; border-radius: 14px; transition: background 0.2s; }
+.menu a:hover { background: rgba(36, 31, 23, 0.07); }
+.menu a.act { background: var(--crema-2); font-family: var(--f-titulo); font-weight: 600; }
+.menu button { padding: 11px 24px; margin-left: 10px; }
+.burger { display: none; width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--negro); background: transparent; cursor: pointer; flex-direction: column; align-items: center; justify-content: center; gap: 5px; }
+.burger span { display: block; width: 20px; height: 2.5px; background: var(--negro); border-radius: 2px; }
+@media (max-width: 1060px) {
+  .burger { display: flex; }
+  .menu { position: absolute; top: var(--nav-alto); left: 0; right: 0; background: var(--crema); flex-direction: column; align-items: stretch; gap: 0; padding: 10px 24px 22px; border-bottom: 1px solid rgba(36, 31, 23, 0.1); display: none; }
+  .menu.abierto { display: flex; }
+  .menu a { padding: 14px 12px; }
+  .menu button { margin: 14px 0 0; }
+}
+@media (max-width: 560px) { .fila { height: 72px; } .menu { top: 72px; } }

@@ -1,0 +1,16 @@
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--f-titulo); font-weight: 600; font-size: 1.02rem;
+  padding: 15px 30px; border-radius: 999px; border: 2px solid transparent;
+  cursor: pointer; white-space: nowrap;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+.btn:hover { transform: translateY(-2px); }
+.block { width: 100%; }
+.rojo { background: var(--rojo); color: #fff; box-shadow: 0 8px 20px -8px rgba(204, 67, 58, 0.7); }
+.linea { border-color: var(--negro); color: var(--negro); background: transparent; }
+.linea:hover { background: var(--negro); color: var(--crema); }
+.blanco { background: #fff; color: var(--rojo); }
+.negro { background: var(--negro); color: #fff; }
+.teal { background: var(--teal); color: #fff; }
+.ocre { background: var(--ocre); color: #fff; }

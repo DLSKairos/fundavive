@@ -1,0 +1,7 @@
+.marca { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.txt { display: flex; flex-direction: column; line-height: 1; color: var(--negro); }
+.txt small { font-size: 0.95rem; margin-bottom: 3px; }
+.txt strong { font-family: var(--f-titulo); font-size: 1.55rem; letter-spacing: -0.02em; white-space: nowrap; }
+.txt i { font-style: normal; font-size: 0.5em; vertical-align: 0.45em; margin: 0 0.15em; }
+.light .txt { color: #fff; }
+@media (max-width: 560px) { .marca { gap: 8px; } .txt small { font-size: 0.75rem; } .txt strong { font-size: 1rem; } }
