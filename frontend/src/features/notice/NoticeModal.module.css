@@ -1,0 +1,10 @@
+.top { position: relative; min-height: 170px; padding: 24px 70px 24px 24px; display: flex; justify-content: flex-end; align-items: flex-start; background: linear-gradient(120deg, var(--rojo), var(--ocre) 70%, var(--amarillo)); background-size: cover; background-position: center; }
+.badge { position: absolute; left: 24px; bottom: 22px; background: #fff; color: var(--negro); font-family: var(--f-titulo); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 14px; border-radius: 999px; }
+.body { padding: 30px 32px; background: var(--crema); }
+.body h3 { font-size: 1.75rem; margin-bottom: 12px; }
+.body p { color: var(--texto-suave); margin-bottom: 16px; }
+.hl { background: #fff; border-radius: 16px; padding: 13px 16px; font-family: var(--f-titulo); font-weight: 600; font-size: 0.95rem; color: var(--rojo); margin-bottom: 24px; }
+.acc { display: flex; justify-content: flex-end; align-items: center; gap: 18px; flex-wrap: wrap; }
+.link { background: none; border: none; cursor: pointer; color: #6a5e4e; font-size: 0.98rem; padding: 8px; }
+.link:hover { color: var(--negro); text-decoration: underline; }
+@media (max-width: 560px) { .body { padding: 26px 22px; } }

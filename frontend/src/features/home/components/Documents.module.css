@@ -1,0 +1,12 @@
+.sec { padding: 100px 0 40px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.doc { height: 100%; background: #fff; border-radius: var(--radio); padding: 30px; display: flex; flex-direction: column; gap: 14px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.doc:hover { transform: translateY(-5px); box-shadow: 0 20px 34px -22px rgba(36, 31, 23, 0.4); }
+.pdf { width: 58px; height: 70px; border-radius: 12px; color: #fff; font-family: var(--f-titulo); font-size: 0.95rem; display: grid; place-items: center; }
+.doc h3 { font-size: 1.3rem; }
+.doc p { font-size: 0.93rem; color: var(--texto-suave); flex: 1; }
+.meta { font-size: 0.82rem; color: var(--texto-tenue); min-height: 1.2em; }
+.acc { display: flex; gap: 10px; flex-wrap: wrap; }
+.acc a { padding: 9px 18px; font-size: 0.95rem; }
+.vacio { background: #fff; border-radius: var(--radio); padding: 34px; color: var(--texto-suave); text-align: center; }
+@media (max-width: 1060px) { .grid { grid-template-columns: 1fr; } }

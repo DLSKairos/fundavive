@@ -23,3 +23,9 @@ export async function api<T>(path: string, { body, headers, ...rest }: Options =
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T)
 }
+
+/** El backend responde siempre `{ success, data }`. Esta función devuelve solo `data`. */
+export async function apiData<T>(path: string, options?: Options): Promise<T> {
+  const res = await api<{ success: boolean; data: T }>(path, options)
+  return res.data
+}

@@ -1,13 +1,18 @@
 import { Hero } from '../components/Hero'
+import { FieldWork } from '../components/FieldWork'
+import { ImpactNumbers } from '../components/ImpactNumbers'
+import { Documents } from '../components/Documents'
+import { DonateCta } from '../components/DonateCta'
 
-/**
- * Página de inicio = ensamblaje de secciones. Se irán agregando en este orden:
- *  1. Hero (listo)  2. FieldWork (carrusel)  3. ImpactNumbers  4. Documents  5. DonateCta
- */
+/** Página de inicio = ensamblaje de secciones. Para reordenar o quitar una sección, se hace aquí. */
 export default function HomePage() {
   return (
     <>
       <Hero />
+      <FieldWork />
+      <ImpactNumbers />
+      <Documents />
+      <DonateCta />
     </>
   )
 }

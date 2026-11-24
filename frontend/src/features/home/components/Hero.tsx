@@ -1,11 +1,14 @@
 import { Container, Button } from '@/shared/ui'
 import { Logo } from '@/shared/layout'
 import { ROUTES } from '@/shared/lib/config'
-import hero from '@/assets/hero.jpg'
+import { useSectionImage } from '@/shared/api/sectionImages'
+import fallbackPhoto from '@/assets/hero.jpg'
 import styles from './Hero.module.css'
 
-/** Portada del inicio: la foto se mueve despacio (zoom suave). TODO: tomar la foto de /api/secciones-imagenes. */
+/** Portada del inicio: la foto se mueve despacio. Usa la imagen 'inicio/hero' del backend o, si no hay, una local. */
 export function Hero() {
+  const photo = useSectionImage('inicio', 'hero') ?? fallbackPhoto
+
   return (
     <section className={styles.hero}>
       <Container>
@@ -24,7 +27,7 @@ export function Hero() {
           </div>
           <div className={styles.visual}>
             <div className={styles.marco}>
-              <div className={styles.foto} style={{ backgroundImage: `url(${hero})` }} role="img" aria-label="Voluntaria compartiendo con niños y niñas" />
+              <div className={styles.foto} style={{ backgroundImage: `url("${photo}")` }} role="img" aria-label="Voluntaria compartiendo con niños y niñas" />
             </div>
             <div className={styles.sello}><Logo height={72} /></div>
           </div>

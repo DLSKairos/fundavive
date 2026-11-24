@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 /** Cuenta desde 0 hasta `target` cuando `start` es true (números de impacto). */
 export function useCountUp(target: number, start: boolean, duration = 1900) {
   const [value, setValue] = useState(0)
+  const reduced = prefersReducedMotion()
 
   useEffect(() => {
-    if (!start) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setValue(target)
-      return
-    }
+    if (!start || reduced) return
     let raf = 0
     let t0: number | null = null
     const step = (t: number) => {
@@ -20,7 +20,8 @@ export function useCountUp(target: number, start: boolean, duration = 1900) {
     }
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
-  }, [target, start, duration])
+  }, [target, start, duration, reduced])
 
-  return value
+  // Con "reducir movimiento" activado, se muestra el número final sin animar.
+  return reduced && start ? target : value
 }

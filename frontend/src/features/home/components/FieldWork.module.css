@@ -1,0 +1,19 @@
+.sec { padding: 100px 0 90px; background: #fff; border-radius: 60px 60px 0 0; margin-top: -50px; position: relative; z-index: 3; }
+.marquee { overflow: hidden; padding: 10px 0 34px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.track { display: flex; gap: 22px; width: max-content; animation: marcha 55s linear infinite; }
+.marquee:hover .track { animation-play-state: paused; }
+@keyframes marcha { to { transform: translateX(calc(-50% - 11px)); } }
+.card { position: relative; width: 380px; height: 250px; border-radius: 26px; overflow: hidden; flex: none; color: #fff; box-shadow: 0 24px 34px -24px rgba(36, 31, 23, 0.55); transition: transform 0.3s ease; }
+.card:hover { transform: translateY(-6px) scale(1.02); }
+.card::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0, 1, 0, 0.55)); }
+.foto { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.wm { position: absolute; right: -30px; bottom: -30px; opacity: 0.22; filter: grayscale(1) brightness(3); }
+.card h3 { position: absolute; left: 22px; bottom: 20px; right: 22px; z-index: 2; font-size: 1.2rem; line-height: 1.2; }
+.tag { position: absolute; top: 16px; left: 16px; z-index: 2; font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255, 255, 255, 0.88); color: var(--texto); padding: 4px 12px; border-radius: 999px; font-family: var(--f-titulo); font-weight: 600; }
+.g1 { background: linear-gradient(135deg, var(--ocre), var(--amarillo)); }
+.g2 { background: linear-gradient(135deg, var(--rojo), var(--ocre)); }
+.g3 { background: linear-gradient(135deg, #2c7482, var(--teal)); }
+.g4 { background: linear-gradient(135deg, #b13a31, var(--rojo)); }
+.g5 { background: linear-gradient(135deg, var(--teal), var(--oliva)); }
+@media (max-width: 560px) { .card { width: 290px; height: 220px; } }
+@media (prefers-reduced-motion: reduce) { .marquee { overflow-x: auto; } }

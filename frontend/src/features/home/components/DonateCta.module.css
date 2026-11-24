@@ -1,0 +1,11 @@
+.sec { padding: 60px 0 110px; }
+.caja { background: var(--rojo); color: #fff; border-radius: 44px; padding: 70px 56px; display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 34px; align-items: center; position: relative; overflow: hidden; }
+.texto { position: relative; z-index: 2; }
+.texto h2 { font-size: clamp(2rem, 3.8vw, 3rem); margin-bottom: 14px; }
+.texto p { max-width: 540px; }
+.botones { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; position: relative; z-index: 2; }
+.dot { position: absolute; border-radius: 50%; pointer-events: none; }
+.c1 { width: 200px; height: 200px; background: var(--ocre); right: -60px; top: -70px; }
+.c2 { width: 90px; height: 90px; background: var(--amarillo); right: 90px; bottom: -34px; }
+@media (max-width: 1060px) { .caja { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .caja { padding: 52px 28px; } }
